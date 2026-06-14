@@ -357,7 +357,7 @@ public abstract class WorldUtil {
         File folder = new File(PlotSquared.platform().worldContainer(), world + File.separator + "region");
         File[] regionFiles = folder.listFiles();
         if (regionFiles == null) {
-            throw new RuntimeException("Could not find worlds folder: " + folder + " ? (no read access?)");
+            return new HashSet<>();
         }
         HashSet<BlockVector2> chunks = new HashSet<>();
         for (File file : regionFiles) {

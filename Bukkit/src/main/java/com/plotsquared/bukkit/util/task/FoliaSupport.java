@@ -270,7 +270,11 @@ public final class FoliaSupport {
 
     private static Object invoke(final Method method, final Object target, final Object... args) {
         try {
-            return Objects.requireNonNull(method, "method").invoke(target, args);
+            final Method resolvedMethod = Objects.requireNonNull(method, "method");
+            if (!resolvedMethod.canAccess(target)) {
+                resolvedMethod.setAccessible(true);
+            }
+            return resolvedMethod.invoke(target, args);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Failed to invoke Folia scheduler method", e);
         }
@@ -292,6 +296,7 @@ public final class FoliaSupport {
             if (handle != null) {
                 try {
                     this.cancelMethod = handle.getClass().getMethod("cancel");
+                    this.cancelMethod.setAccessible(true);
                 } catch (ReflectiveOperationException e) {
                     throw new IllegalStateException("Failed to resolve Folia task cancel method", e);
                 }
