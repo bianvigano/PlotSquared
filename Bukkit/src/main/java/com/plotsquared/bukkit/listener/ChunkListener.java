@@ -19,6 +19,8 @@
 package com.plotsquared.bukkit.listener;
 
 import com.google.inject.Inject;
+import com.plotsquared.bukkit.util.task.FoliaSupport;
+import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.configuration.Settings;
 import com.plotsquared.core.location.Location;
 import com.plotsquared.core.plot.Plot;
@@ -52,9 +54,12 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.plugin.Plugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.plotsquared.core.util.ReflectionUtils.getRefClass;
 
@@ -70,8 +75,7 @@ public class ChunkListener implements Listener {
     private RefMethod methodGetHandleWorld;
     private RefField mustNotSave;
     private Object objChunkStatusFull = null;
-    private Chunk lastChunk;
-    private boolean ignoreUnload = false;
+    private final Set<String> ignoredUnloads = ConcurrentHashMap.newKeySet();
 
     @Inject
     public ChunkListener(final @NonNull PlotAreaManager plotAreaManager) {
@@ -119,9 +123,13 @@ public class ChunkListener implements Listener {
         if (!((Boolean) field.get())) {
             field.set(true);
             if (chunk.isLoaded()) {
-                ignoreUnload = true;
-                chunk.unload(false);
-                ignoreUnload = false;
+                final String chunkKey = chunkKey(chunk);
+                ignoredUnloads.add(chunkKey);
+                try {
+                    chunk.unload(false);
+                } finally {
+                    ignoredUnloads.remove(chunkKey);
+                }
             }
         }
         return true;
@@ -175,7 +183,7 @@ public class ChunkListener implements Listener {
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent event) {
-        if (ignoreUnload) {
+        if (ignoredUnloads.contains(chunkKey(event.getChunk()))) {
             return;
         }
         Chunk chunk = event.getChunk();
@@ -217,22 +225,16 @@ public class ChunkListener implements Listener {
 
     private void onInternalEntitySpawn(EntitySpawnEvent event) {
         PaperLib.getChunkAtAsync(event.getLocation()).thenAccept(chunk -> {
-            if (chunk == this.lastChunk) {
-                event.getEntity().remove();
-                event.setCancelled(true);
-                return;
-            }
-            if (!this.plotAreaManager.hasPlotArea(chunk.getWorld().getName())) {
-                return;
-            }
-            Entity[] entities = chunk.getEntities();
-            if (entities.length > Settings.Chunk_Processor.MAX_ENTITIES) {
-                event.getEntity().remove();
-                event.setCancelled(true);
-                this.lastChunk = chunk;
-            } else {
-                this.lastChunk = null;
-            }
+            FoliaSupport.runAtLocation((Plugin) PlotSquared.platform(), event.getLocation(), () -> {
+                if (!this.plotAreaManager.hasPlotArea(chunk.getWorld().getName())) {
+                    return;
+                }
+                Entity[] entities = chunk.getEntities();
+                if (entities.length > Settings.Chunk_Processor.MAX_ENTITIES) {
+                    event.getEntity().remove();
+                    event.setCancelled(true);
+                }
+            });
         });
     }
 
@@ -293,6 +295,10 @@ public class ChunkListener implements Listener {
             }
         }
         return false;
+    }
+
+    private String chunkKey(final @NonNull Chunk chunk) {
+        return chunk.getWorld().getName() + ':' + chunk.getX() + ':' + chunk.getZ();
     }
 
 }

@@ -20,6 +20,7 @@ package com.plotsquared.bukkit.listener;
 
 import com.plotsquared.bukkit.util.BukkitEntityUtil;
 import com.plotsquared.bukkit.util.BukkitUtil;
+import com.plotsquared.bukkit.util.task.FoliaSupport;
 import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.configuration.Settings;
 import com.plotsquared.core.location.Location;
@@ -57,9 +58,7 @@ import java.util.List;
 public class EntitySpawnListener implements Listener {
 
     private static final String KEY = "P2";
-    private static boolean ignoreTP = false;
-    private static boolean hasPlotArea = false;
-    private static String areaName = null;
+    private static final String TELEPORTING_KEY = "P2-teleporting";
 
     public static void testNether(final Entity entity) {
         @NonNull World world = entity.getWorld();
@@ -71,11 +70,7 @@ public class EntitySpawnListener implements Listener {
 
     public static void testCreate(final Entity entity) {
         @NonNull World world = entity.getWorld();
-        if (!world.getName().equals(areaName)) {
-            areaName = world.getName();
-            hasPlotArea = PlotSquared.get().getPlotAreaManager().hasPlotArea(areaName);
-        }
-        if (!hasPlotArea) {
+        if (!PlotSquared.get().getPlotAreaManager().hasPlotArea(world.getName())) {
             return;
         }
         test(entity);
@@ -92,26 +87,22 @@ public class EntitySpawnListener implements Listener {
             org.bukkit.Location origin = (org.bukkit.Location) meta.get(0).value();
             World originWorld = origin.getWorld();
             if (!originWorld.equals(world)) {
-                if (!ignoreTP) {
-                    if (!world.getName().equalsIgnoreCase(originWorld + "_the_end")) {
-                        if (entity.getType() == EntityType.PLAYER) {
-                            return;
-                        }
-                        try {
-                            ignoreTP = true;
-                            PaperLib.teleportAsync(entity, origin);
-                        } finally {
-                            ignoreTP = false;
-                        }
-                        if (entity.getLocation().getWorld().equals(world)) {
-                            entity.remove();
-                        }
-                    }
-                } else {
+                if (entity.hasMetadata(TELEPORTING_KEY)) {
                     if (entity.getType() == EntityType.PLAYER) {
                         return;
                     }
                     entity.remove();
+                    return;
+                }
+                if (!world.getName().equalsIgnoreCase(originWorld + "_the_end")) {
+                    if (entity.getType() == EntityType.PLAYER) {
+                        return;
+                    }
+                    final Plugin plugin = (Plugin) PlotSquared.platform();
+                    entity.setMetadata(TELEPORTING_KEY, new FixedMetadataValue(plugin, true));
+                    PaperLib.teleportAsync(entity, origin).whenComplete((ignored, throwable) ->
+                            FoliaSupport.runAtLocation(plugin, origin, () -> entity.removeMetadata(TELEPORTING_KEY, plugin))
+                    );
                 }
             }
         }

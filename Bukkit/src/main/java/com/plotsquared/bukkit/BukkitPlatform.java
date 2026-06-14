@@ -52,6 +52,7 @@ import com.plotsquared.bukkit.util.SetGenCB;
 import com.plotsquared.bukkit.util.TranslationUpdateManager;
 import com.plotsquared.bukkit.util.UpdateUtility;
 import com.plotsquared.bukkit.util.task.BukkitTaskManager;
+import com.plotsquared.bukkit.util.task.FoliaSupport;
 import com.plotsquared.bukkit.util.task.PaperTimeConverter;
 import com.plotsquared.bukkit.util.task.SpigotTimeConverter;
 import com.plotsquared.bukkit.uuid.EssentialsUUIDService;
@@ -569,7 +570,11 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
         this.startMetrics();
 
         if (Settings.Enabled_Components.WORLDS) {
-            TaskManager.getPlatformImplementation().taskRepeat(this::unload, TaskTime.seconds(10L));
+            if (!FoliaSupport.isFolia()) {
+                TaskManager.getPlatformImplementation().taskRepeat(this::unload, TaskTime.seconds(10L));
+            } else {
+                LOGGER.info("Folia detected: disabling the global world unload sweep");
+            }
             try {
                 singleWorldListener = injector().getInstance(SingleWorldListener.class);
                 Bukkit.getPluginManager().registerEvents(singleWorldListener, this);
@@ -579,20 +584,28 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
         }
 
         // Clean up potential memory leak
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            try {
-                for (final PlotPlayer<? extends Player> player : this.playerManager().getPlayers()) {
-                    if (player.getPlatformPlayer() == null || !player.getPlatformPlayer().isOnline()) {
-                        this.playerManager().removePlayer(player);
+        if (!FoliaSupport.isFolia()) {
+            Bukkit.getScheduler().runTaskTimer(this, () -> {
+                try {
+                    for (final PlotPlayer<? extends Player> player : this.playerManager().getPlayers()) {
+                        if (player.getPlatformPlayer() == null || !player.getPlatformPlayer().isOnline()) {
+                            this.playerManager().removePlayer(player);
+                        }
                     }
+                } catch (final Exception e) {
+                    getLogger().warning("Failed to clean up players: " + e.getMessage());
                 }
-            } catch (final Exception e) {
-                getLogger().warning("Failed to clean up players: " + e.getMessage());
-            }
-        }, 100L, 100L);
+            }, 100L, 100L);
+        } else {
+            LOGGER.info("Folia detected: disabling the periodic player cleanup sweep");
+        }
 
         // Check if we are in a safe environment
-        ServerLib.checkUnsafeForks();
+        if (!FoliaSupport.isFolia()) {
+            ServerLib.checkUnsafeForks();
+        } else {
+            LOGGER.info("Folia detected: skipping unsafe fork check");
+        }
     }
 
     private void unload() {
@@ -782,6 +795,10 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
 
     @SuppressWarnings("deprecation")
     private void runEntityTask() {
+        if (FoliaSupport.isFolia()) {
+            LOGGER.info("Folia detected: disabling the global entity cleanup task");
+            return;
+        }
         TaskManager.runTaskRepeat(() -> this.plotAreaManager.forEachPlotArea(plotArea -> {
             final World world = Bukkit.getWorld(plotArea.getWorldName());
             try {

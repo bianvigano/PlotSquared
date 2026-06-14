@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import com.plotsquared.bukkit.BukkitPlatform;
 import com.plotsquared.bukkit.player.BukkitPlayer;
 import com.plotsquared.bukkit.player.BukkitPlayerManager;
+import com.plotsquared.bukkit.util.task.FoliaSupport;
 import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.configuration.caption.Caption;
 import com.plotsquared.core.configuration.caption.LocaleHolder;
@@ -193,19 +194,47 @@ public class BukkitUtil extends WorldUtil {
             final @NonNull Consumer<Chunk> chunkConsumer
     ) {
         PaperLib.getChunkAtAsync(Objects.requireNonNull(getWorld(world)), x >> 4, z >> 4, true)
-                .thenAccept(chunk -> ensureMainThread(chunkConsumer, chunk));
+                .thenAccept(chunk -> ensureMainThread(chunkConsumer, chunk, world, x, z));
     }
 
     private static void ensureLoaded(final @NonNull Location location, final @NonNull Consumer<Chunk> chunkConsumer) {
-        PaperLib.getChunkAtAsync(adapt(location), true).thenAccept(chunk -> ensureMainThread(chunkConsumer, chunk));
+        PaperLib.getChunkAtAsync(adapt(location), true)
+                .thenAccept(chunk -> ensureMainThread(chunkConsumer, chunk, location.getWorldName(), location.getX(), location.getZ()));
     }
 
     private static <T> void ensureMainThread(final @NonNull Consumer<T> consumer, final @NonNull T value) {
-        if (Bukkit.isPrimaryThread()) {
+        if (!FoliaSupport.isFolia() && Bukkit.isPrimaryThread()) {
             consumer.accept(value);
         } else {
-            Bukkit.getScheduler().runTask(BukkitPlatform.getPlugin(BukkitPlatform.class), () -> consumer.accept(value));
+            FoliaSupport.run(
+                    BukkitPlatform.getPlugin(BukkitPlatform.class),
+                    () -> consumer.accept(value)
+            );
         }
+    }
+
+    private static <T> void ensureMainThread(
+            final @NonNull Consumer<T> consumer,
+            final @NonNull T value,
+            final @NonNull String worldName,
+            final int x,
+            final int z
+    ) {
+        if (!FoliaSupport.isFolia()) {
+            ensureMainThread(consumer, value);
+            return;
+        }
+        final World world = getWorld(worldName);
+        if (world == null) {
+            return;
+        }
+        FoliaSupport.runAtLocation(
+                BukkitPlatform.getPlugin(BukkitPlatform.class),
+                world,
+                x,
+                z,
+                () -> consumer.accept(value)
+        );
     }
 
     @Override
@@ -564,6 +593,9 @@ public class BukkitUtil extends WorldUtil {
     @Override
     public Set<BlockVector2> getChunkChunks(String world) {
         Set<BlockVector2> chunks = super.getChunkChunks(world);
+        if (FoliaSupport.isFolia()) {
+            return chunks;
+        }
         if (Bukkit.isPrimaryThread()) {
             for (Chunk chunk : Objects.requireNonNull(Bukkit.getWorld(world)).getLoadedChunks()) {
                 BlockVector2 loc = BlockVector2.at(chunk.getX() >> 5, chunk.getZ() >> 5);

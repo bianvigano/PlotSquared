@@ -88,7 +88,6 @@ public class PaperListener implements Listener {
     private static final NamespacedKey FISHING_BOBBER = NamespacedKey.minecraft("fishing_bobber");
 
     private final PlotAreaManager plotAreaManager;
-    private Chunk lastChunk;
 
     @Inject
     public PaperListener(final @NonNull PlotAreaManager plotAreaManager) {

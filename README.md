@@ -16,6 +16,104 @@ flags. Such as: weather, time, game modes, pvp status.
 Whilst we provide a whole load of unique features, the biggest focus
 is to provide a lag-free and smooth experience.
 
+## How It Works
+
+This repository is a Gradle multi-module project with two main modules:
+
+* `Core` (`plotsquared-core`) contains the platform-independent logic such as plot models, commands, flags,
+  configuration handling, storage integration, generators, and API/event systems.
+* `Bukkit` (`plotsquared-bukkit`) contains the Paper/Bukkit plugin entry point, listeners, platform adapters,
+  permissions integrations, and the final shaded plugin jar.
+
+At runtime, Bukkit loads the plugin through `plugin.yml`, which points to `com.plotsquared.bukkit.BukkitPlatform`.
+During startup, the Bukkit module:
+
+* creates the core `PlotSquared` instance
+* loads configuration and localization resources
+* initializes dependency injection
+* wires storage, UUID services, listeners, commands, and plot world generators
+* registers the `/plots` command and Bukkit/Paper event listeners
+
+In short: `Core` contains the main behavior, while `Bukkit` connects that behavior to a Minecraft server and
+packages the plugin you install.
+
+## Build The Jar
+
+### Requirements
+
+* A real git clone of the repository. The build checks for `.git`, so a downloaded ZIP archive will not work.
+* Java 21 installed locally
+* Linux/macOS shell or Windows terminal that can run the Gradle wrapper
+
+### Build Only The Bukkit Plugin Jar
+
+Run this from the repository root:
+
+```bash
+./gradlew :plotsquared-bukkit:shadowJar
+```
+
+The plugin jar will be created at:
+
+```text
+Bukkit/build/libs/plotsquared-bukkit-<version>.jar
+```
+
+Example output from this repository:
+
+```text
+Bukkit/build/libs/plotsquared-bukkit-7.5.14-SNAPSHOT.jar
+```
+
+### Build Everything
+
+To build all modules:
+
+```bash
+./gradlew clean build
+```
+
+This will also build the shaded jars because the `build` task depends on `shadowJar`.
+
+### Local Test Server
+
+The repository also provides helper tasks for launching local Paper test servers for supported versions, for example:
+
+```bash
+./gradlew runServer-1.20.6
+```
+
+These tasks automatically use the freshly built Bukkit plugin jar.
+
+### Which Jar Should Be Used On The Server?
+
+Use the jar from `Bukkit/build/libs/`.
+
+The jar from `Core/build/libs/` is the shared core library artifact, not the Paper/Bukkit plugin you drop into the
+server `plugins/` folder.
+
+## Server Compatibility
+
+PlotSquared is built from the Bukkit module and can be used on Bukkit-compatible server software.
+
+* Paper: supported
+* Purpur: supported through Paper compatibility
+* Spigot: supported, although some behavior is more optimized on Paper
+* Folia: supported with a Folia-aware scheduler compatibility layer
+
+### Folia Notes
+
+Folia support in this repository uses runtime scheduler detection and switches PlotSquared scheduling to Folia schedulers
+when available.
+
+To avoid unsafe global world access on Folia, some global sweep tasks are intentionally disabled:
+
+* the global world unload sweep
+* the periodic player cleanup sweep
+* the global entity cleanup sweep
+
+The plugin still builds as a single jar and does not require a separate Folia-only artifact.
+
 
 <p align="center">
     <a href="https://bstats.org/plugin/bukkit/PlotSquared" title="PlotSquared on bStats">
