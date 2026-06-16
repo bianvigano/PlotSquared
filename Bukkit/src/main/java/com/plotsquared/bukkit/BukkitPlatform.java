@@ -280,16 +280,14 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
         final PlotSquared plotSquared = new PlotSquared(this, "Bukkit");
 
         // FastAsyncWorldEdit
-        if (Settings.FAWE_Components.FAWE_HOOK) {
-            Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
-            if (fawe != null) {
-                try {
-                    Class.forName("com.fastasyncworldedit.bukkit.regions.plotsquared.FaweQueueCoordinator");
-                    faweHook = true;
-                } catch (Exception ignored) {
-                    LOGGER.error("Incompatible version of FastAsyncWorldEdit to enable hook, please upgrade: https://ci.athion" +
-                            ".net/job/FastAsyncWorldEdit/");
-                }
+        Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
+        if (fawe != null) {
+            try {
+                Class.forName("com.fastasyncworldedit.bukkit.regions.plotsquared.FaweQueueCoordinator");
+                faweHook = true;
+            } catch (Exception ignored) {
+                LOGGER.error("Incompatible version of FastAsyncWorldEdit to enable hook, please upgrade: https://ci.athion" +
+                        ".net/job/FastAsyncWorldEdit/");
             }
         }
 

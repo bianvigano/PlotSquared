@@ -639,11 +639,9 @@ public class Settings extends Config {
 
     }
 
-    @Comment("Enable or disable all of or parts of the FastAsyncWorldEdit-PlotSquared hook")
+    @Comment("Enable or disable parts of the FastAsyncWorldEdit-PlotSquared hook")
     public static final class FAWE_Components {
 
-        @Comment("Use FastAsyncWorldEdit for queue handling.")
-        public static boolean FAWE_HOOK = true;
         public static boolean CUBOIDS = true;
         public static boolean CLEAR = true;
         public static boolean COPY_AND_SWAP = true;
