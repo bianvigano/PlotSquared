@@ -126,6 +126,14 @@ plot:
   floor_claimed: minecraft:lime_concrete
 ```
 
+The block form still works for both keys:
+
+```yml
+plot:
+  floor: minecraft:red_stained_glass
+  floor_claimed: minecraft:air
+```
+
 Behavior:
 
 * `plot.floor` is used for unclaimed plots
@@ -146,6 +154,86 @@ plot:
 plot:
   floor: minecraft:grass_block
   floor_claimed: 50%minecraft:lime_concrete,50%minecraft:green_concrete
+```
+
+Both keys can also be written as sections with a nested `schematic` configuration.
+If `plot.floor_claimed.schematic.on_claim` is enabled, it is preferred on claim.
+Otherwise `plot.floor.schematic.on_claim` is used as a fallback.
+On unclaim, the plot returns to the normal `plot.floor` block configuration.
+
+```yml
+plot:
+  floor:
+    schematic:
+      on_claim: true
+      schematics: []
+      specify_on_claim: false
+      place_top_block: true
+      file: 'null'
+  floor_claimed:
+    schematic:
+      on_claim: true
+      schematics: []
+      specify_on_claim: false
+      place_top_block: true
+      file: 'null'
+```
+
+Meaning of the schematic options:
+
+* `on_claim`: enables schematic pasting for that floor configuration when a plot is claimed
+* `specify_on_claim`: allows the schematic name provided during claim to be used first
+* `place_top_block`: controls whether this schematic is pasted on top of the plot floor height or from the area's minimum build height
+* if `specify_on_claim` is `true` and a schematic name is provided during claim, PlotSquared tries that schematic first
+* if no schematic name is provided, or the requested schematic is not found, PlotSquared falls back to `file`
+* if `specify_on_claim` is `false`, PlotSquared only uses the value from `file`
+* if `place_top_block` is `true`, this schematic uses the same "paste on top" behavior as the normal PlotSquared schematic setting
+* if `place_top_block` is `false`, this schematic is pasted from the area's minimum build height instead
+* if a claimed floor schematic is active and no claimed floor `block` is configured, the normal `plot.floor` layer is cleared for claimed plots
+* `schematics: []` is kept for compatibility with the existing area-level schematic format
+
+If you use the section form and still want to define floor blocks, add a `block`, `blocks`, or `value` entry inside the section.
+
+How to use it:
+
+* put your schematic files inside `plugins/PlotSquared/schematics/`
+* write the file name in `plot.floor.schematic.file` or `plot.floor_claimed.schematic.file`
+* you can use `claimed-floor.schem`, `claimed-floor.schematic`, or just `claimed-floor`
+* if no file extension is given, PlotSquared automatically tries `.schem`
+* if `plot.floor_claimed.schematic.on_claim` is `true`, that schematic is pasted when the plot is claimed
+* if `plot.floor_claimed.schematic.on_claim` is not enabled, PlotSquared falls back to `plot.floor.schematic`
+* if the plot is unclaimed, the floor returns to the normal `plot.floor` block setup
+
+Example folder layout:
+
+```text
+plugins/
+  PlotSquared/
+    schematics/
+      floor-default.schem
+      claimed-floor.schem
+```
+
+Example config with both block and schematic support:
+
+```yml
+plot:
+  floor:
+    block: minecraft:red_stained_glass
+    schematic:
+      on_claim: false
+      schematics: []
+      specify_on_claim: false
+      place_top_block: true
+      file: 'floor-default.schem'
+  floor_claimed:
+    block: minecraft:air
+    schematic:
+      on_claim: true
+      schematics: []
+      specify_on_claim: false
+      place_top_block: true
+      file: 'claimed-floor.schem'
 ```
 
 

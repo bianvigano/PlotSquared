@@ -79,13 +79,28 @@ public class EntitySpawnListener implements Listener {
     public static void test(Entity entity) {
         @NonNull World world = entity.getWorld();
         List<MetadataValue> meta = entity.getMetadata(KEY);
+        final Plugin plugin = (Plugin) PlotSquared.platform();
         if (meta.isEmpty()) {
             if (PlotSquared.get().getPlotAreaManager().hasPlotArea(world.getName())) {
-                entity.setMetadata(KEY, new FixedMetadataValue((Plugin) PlotSquared.platform(), entity.getLocation()));
+                entity.setMetadata(KEY, new FixedMetadataValue(plugin, entity.getLocation()));
             }
         } else {
-            org.bukkit.Location origin = (org.bukkit.Location) meta.get(0).value();
-            World originWorld = origin.getWorld();
+            Object value = meta.get(0).value();
+            if (!(value instanceof final org.bukkit.Location origin)) {
+                entity.removeMetadata(KEY, plugin);
+                return;
+            }
+            final World originWorld;
+            try {
+                originWorld = origin.getWorld();
+            } catch (IllegalArgumentException ignored) {
+                entity.removeMetadata(KEY, plugin);
+                return;
+            }
+            if (originWorld == null) {
+                entity.removeMetadata(KEY, plugin);
+                return;
+            }
             if (!originWorld.equals(world)) {
                 if (entity.hasMetadata(TELEPORTING_KEY)) {
                     if (entity.getType() == EntityType.PLAYER) {
@@ -98,7 +113,6 @@ public class EntitySpawnListener implements Listener {
                     if (entity.getType() == EntityType.PLAYER) {
                         return;
                     }
-                    final Plugin plugin = (Plugin) PlotSquared.platform();
                     entity.setMetadata(TELEPORTING_KEY, new FixedMetadataValue(plugin, true));
                     PaperLib.teleportAsync(entity, origin).whenComplete((ignored, throwable) ->
                             FoliaSupport.runAtLocation(plugin, origin, () -> entity.removeMetadata(TELEPORTING_KEY, plugin))

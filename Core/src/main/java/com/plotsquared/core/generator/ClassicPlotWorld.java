@@ -35,6 +35,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class ClassicPlotWorld extends SquarePlotWorld {
@@ -47,6 +48,8 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
     public BlockBucket MAIN_BLOCK = new BlockBucket(BlockTypes.STONE);
     public BlockBucket TOP_BLOCK = new BlockBucket(BlockTypes.GRASS_BLOCK);
     public @Nullable BlockBucket CLAIMED_TOP_BLOCK = null;
+    public @Nullable ClaimSchematicConfig FLOOR_SCHEMATIC = null;
+    public @Nullable ClaimSchematicConfig CLAIMED_FLOOR_SCHEMATIC = null;
     public BlockBucket WALL_BLOCK = new BlockBucket(BlockTypes.STONE_SLAB);
     public BlockBucket CLAIMED_WALL_BLOCK = new BlockBucket(BlockTypes.SANDSTONE_SLAB);
     public BlockBucket WALL_FILLING = new BlockBucket(BlockTypes.STONE);
@@ -98,6 +101,71 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
             return null;
         }
         return bucket;
+    }
+
+    private static @Nullable String getConfiguredBlockBucketString(
+            final @NonNull ConfigurationSection config,
+            final @NonNull String path
+    ) {
+        if (!config.isConfigurationSection(path)) {
+            return config.getString(path);
+        }
+        final ConfigurationSection section = config.getConfigurationSection(path);
+        if (section == null) {
+            return null;
+        }
+        final String block = section.getString("block");
+        if (block != null) {
+            return block;
+        }
+        final String blocks = section.getString("blocks");
+        if (blocks != null) {
+            return blocks;
+        }
+        return section.getString("value");
+    }
+
+    private static BlockBucket loadConfiguredBlockBucket(
+            final @NonNull ConfigurationSection config,
+            final @NonNull String path,
+            final @NonNull BlockBucket def
+    ) {
+        final String input = getConfiguredBlockBucketString(config, path);
+        if (input == null) {
+            return def;
+        }
+        return createCheckedBlockBucket(input, def);
+    }
+
+    private static @Nullable BlockBucket loadOptionalConfiguredBlockBucket(
+            final @NonNull ConfigurationSection config,
+            final @NonNull String path
+    ) {
+        return createOptionalCheckedBlockBucket(getConfiguredBlockBucketString(config, path));
+    }
+
+    private static @Nullable ClaimSchematicConfig loadClaimSchematicConfig(
+            final @NonNull ConfigurationSection config,
+            final @NonNull String path
+    ) {
+        if (!config.isConfigurationSection(path)) {
+            return null;
+        }
+        final ConfigurationSection section = config.getConfigurationSection(path);
+        if (section == null) {
+            return null;
+        }
+        final ConfigurationSection schematic = section.getConfigurationSection("schematic");
+        if (schematic == null) {
+            return null;
+        }
+        return new ClaimSchematicConfig(
+                schematic.getBoolean("on_claim"),
+                schematic.getString("file", "null"),
+                schematic.getBoolean("specify_on_claim"),
+                schematic.getStringList("schematics"),
+                schematic.getBoolean("place_top_block", Settings.Schematics.PASTE_ON_TOP)
+        );
     }
 
     /**
@@ -165,8 +233,10 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
         this.PLOT_BEDROCK = config.getBoolean("plot.bedrock");
         this.PLOT_HEIGHT = Math.min(getMaxGenHeight(), config.getInt("plot.height"));
         this.MAIN_BLOCK = createCheckedBlockBucket(config.getString("plot.filling"), MAIN_BLOCK);
-        this.TOP_BLOCK = createCheckedBlockBucket(config.getString("plot.floor"), TOP_BLOCK);
-        this.CLAIMED_TOP_BLOCK = createOptionalCheckedBlockBucket(config.getString("plot.floor_claimed"));
+        this.TOP_BLOCK = loadConfiguredBlockBucket(config, "plot.floor", TOP_BLOCK);
+        this.CLAIMED_TOP_BLOCK = loadOptionalConfiguredBlockBucket(config, "plot.floor_claimed");
+        this.FLOOR_SCHEMATIC = loadClaimSchematicConfig(config, "plot.floor");
+        this.CLAIMED_FLOOR_SCHEMATIC = loadClaimSchematicConfig(config, "plot.floor_claimed");
         this.WALL_BLOCK = createCheckedBlockBucket(config.getString("wall.block"), WALL_BLOCK);
         this.ROAD_HEIGHT = Math.min(getMaxGenHeight(), config.getInt("road.height"));
         this.ROAD_BLOCK = createCheckedBlockBucket(config.getString("road.block"), ROAD_BLOCK);
@@ -190,6 +260,29 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
             return plotRoadMin;
         }
         return Math.min(WALL_HEIGHT, plotRoadMin);
+    }
+
+    public @Nullable ClaimSchematicConfig getClaimFloorSchematic() {
+        if (this.CLAIMED_FLOOR_SCHEMATIC != null && this.CLAIMED_FLOOR_SCHEMATIC.onClaim()) {
+            return this.CLAIMED_FLOOR_SCHEMATIC;
+        }
+        if (this.FLOOR_SCHEMATIC != null && this.FLOOR_SCHEMATIC.onClaim()) {
+            return this.FLOOR_SCHEMATIC;
+        }
+        return null;
+    }
+
+    public record ClaimSchematicConfig(
+            boolean onClaim,
+            @Nullable String file,
+            boolean specifyOnClaim,
+            @NonNull List<String> schematics,
+            boolean placeTopBlock
+    ) {
+
+        public boolean hasDefaultFile() {
+            return this.file != null && !this.file.isBlank() && !"null".equalsIgnoreCase(this.file);
+        }
     }
 
 }

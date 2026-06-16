@@ -1831,8 +1831,47 @@ public class Plot {
             );
         }
         plotworld.getPlotManager().claimPlot(this, null);
+        if (plotworld instanceof final ClassicPlotWorld classicPlotWorld) {
+            this.pasteClaimFloorSchematic(player, schematic, classicPlotWorld);
+        }
         this.getPlotModificationManager().setSign(player.getName());
         return true;
+    }
+
+    private void pasteClaimFloorSchematic(
+            final @NonNull PlotPlayer<?> player,
+            final @Nullable String requestedSchematic,
+            final @NonNull ClassicPlotWorld classicPlotWorld
+    ) {
+        final ClassicPlotWorld.ClaimSchematicConfig config = classicPlotWorld.getClaimFloorSchematic();
+        if (config == null) {
+            return;
+        }
+        try {
+            Schematic selectedSchematic = null;
+            if (config.specifyOnClaim() && requestedSchematic != null && !requestedSchematic.isBlank()) {
+                selectedSchematic = schematicHandler.getSchematic(requestedSchematic);
+            }
+            if (selectedSchematic == null && config.hasDefaultFile()) {
+                selectedSchematic = schematicHandler.getSchematic(config.file());
+            }
+            if (selectedSchematic == null) {
+                return;
+            }
+            final int yOffset = config.placeTopBlock() ? 0 : getArea().getMinBuildHeight();
+            schematicHandler.paste(
+                    selectedSchematic,
+                    this,
+                    0,
+                    yOffset,
+                    0,
+                    config.placeTopBlock(),
+                    player,
+                    null
+            );
+        } catch (SchematicHandler.UnsupportedFormatException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
