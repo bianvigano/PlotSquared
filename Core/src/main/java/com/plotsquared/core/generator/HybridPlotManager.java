@@ -52,7 +52,6 @@ import java.util.Objects;
 public class HybridPlotManager extends ClassicPlotManager {
 
     public static boolean REGENERATIVE_CLEAR = true;
-
     private final HybridPlotWorld hybridPlotWorld;
     private final RegionManager regionManager;
     private final ProgressSubscriberFactory subscriberFactory;
@@ -258,7 +257,9 @@ public class HybridPlotManager extends ClassicPlotManager {
             @Nullable PlotPlayer<?> actor,
             @Nullable QueueCoordinator queue
     ) {
-        if (this.regionManager.notifyClear(this)) {
+        final boolean skipDelegatedClear = hybridPlotWorld.getClaimFloorSchematic() != null
+                || hybridPlotWorld.CLAIMED_TOP_BLOCK != null;
+        if (!skipDelegatedClear && this.regionManager.notifyClear(this)) {
             //If this returns false, the clear didn't work
             if (this.regionManager.handleClear(plot, whenDone, this, actor)) {
                 return true;
@@ -324,7 +325,13 @@ public class HybridPlotManager extends ClassicPlotManager {
                         BlockTypes.AIR.getDefaultState()
                 );
             }
-            queue.setBiomeCuboid(pos1, pos2, biome);
+            // Setting biomes column-wise avoids invalid section indexing on some runtime combinations
+            // where biome cuboid writes still assume a legacy 0..255 vertical range.
+            for (int x = pos1.getX(); x <= pos2.getX(); x++) {
+                for (int z = pos1.getZ(); z <= pos2.getZ(); z++) {
+                    queue.setBiome(x, z, biome);
+                }
+            }
         } else {
             queue.setRegenRegion(new CuboidRegion(pos1.getBlockVector3(), pos2.getBlockVector3()));
         }

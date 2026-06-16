@@ -18,13 +18,13 @@
  */
 package com.plotsquared.core.command;
 
-import com.plotsquared.core.PlotSquared;
+// import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.configuration.caption.StaticCaption;
 import com.plotsquared.core.player.PlotPlayer;
 import com.plotsquared.core.util.task.TaskManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+// import net.kyori.adventure.text.Component;
+// import net.kyori.adventure.text.minimessage.tag.Tag;
+// import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 @CommandDeclaration(command = "plugin",
         permission = "plots.use",
@@ -36,18 +36,43 @@ public class PluginCmd extends SubCommand {
     @Override
     public boolean onCommand(final PlotPlayer<?> player, String[] args) {
         TaskManager.getPlatformImplementation().taskAsync(() -> {
-            player.sendMessage(
-                    StaticCaption.of("<gray>>> </gray><gold><bold>" + PlotSquared
-                            .platform()
-                            .pluginName() + " <reset><gray>(<gold>Version</gold><gray>: </gray><gold><version></gold><gray>)</gray>"),
-                    TagResolver.resolver("version", Tag.inserting(Component.text(String.valueOf(PlotSquared.get().getVersion()))))
-            );
+        //     player.sendMessage(
+        //             StaticCaption.of("<gray>>> </gray><gold><bold>" + PlotSquared
+        //                     .platform()
+        //                     .pluginName() + " <reset><gray>(<gold>Version</gold><gray>: </gray><gold><version></gold><gray>)</gray>"),
+        //             TagResolver.resolver("version", Tag.inserting(Component.text(String.valueOf(PlotSquared.get().getVersion()))))
+        //     );
+        //     player.sendMessage(StaticCaption.of(
+        //             "<gray>>> </gray><gold><bold>Authors<reset><gray>: </gray><gold>Citymonstret </gold><gray>& </gray><gold>Empire92 </gold><gray>& </gray><gold>MattBDev </gold><gray>& </gray><gold>dordsor21 </gold><gray>& </gray><gold>NotMyFault </gold><gray>& </gray><gold>SirYwell</gold>"));
+        //     player.sendMessage(StaticCaption.of(
+        //             "<gray>>> </gray><gold><bold>Wiki<reset><gray>: </gray><gold><click:open_url:https://intellectualsites.gitbook.io/plotsquared/>https://intellectualsites.gitbook.io/plotsquared/</gold>"));
+        //     player.sendMessage(StaticCaption.of(
+        //             "<gray>>> </gray><gold><bold>Discord<reset><gray>: </gray><gold><click:open_url:https://discord.gg/intellectualsites>https://discord.gg/intellectualsites</gold>"));
+
             player.sendMessage(StaticCaption.of(
-                    "<gray>>> </gray><gold><bold>Authors<reset><gray>: </gray><gold>Citymonstret </gold><gray>& </gray><gold>Empire92 </gold><gray>& </gray><gold>MattBDev </gold><gray>& </gray><gold>dordsor21 </gold><gray>& </gray><gold>NotMyFault </gold><gray>& </gray><gold>SirYwell</gold>"));
+                    "<gray>>> </gray><gold><bold>Evorative Plot System</bold> " +
+                    "<gray>(<gold>Version</gold><gray>: </gray><gold>1.0</gold><gray>)</gray>"
+            ));
+
             player.sendMessage(StaticCaption.of(
-                    "<gray>>> </gray><gold><bold>Wiki<reset><gray>: </gray><gold><click:open_url:https://intellectualsites.gitbook.io/plotsquared/>https://intellectualsites.gitbook.io/plotsquared/</gold>"));
+                    "<gray>>> </gray><gold><bold>Platform</bold><reset><gray>: </gray><gold>Evorative Network</gold>"
+            ));
+
             player.sendMessage(StaticCaption.of(
-                    "<gray>>> </gray><gold><bold>Discord<reset><gray>: </gray><gold><click:open_url:https://discord.gg/intellectualsites>https://discord.gg/intellectualsites</gold>"));
+                    "<gray>>> </gray><gold><bold>Website</bold><reset><gray>: </gray>" +
+                    "<gold><click:open_url:https://evorative.com>https://evorative.com</click></gold>"
+            ));
+
+            player.sendMessage(StaticCaption.of(
+                    "<gray>>> </gray><gold><bold>Minecraft</bold><reset><gray>: </gray>" +
+                    "<gold><click:open_url:https://evorative.com/minecraft>https://evorative.com/minecraft</click></gold>"
+            ));
+
+            player.sendMessage(StaticCaption.of(
+                    "<gray>>> </gray><gold><bold>Discord</bold><reset><gray>: </gray>" +
+                    "<gold>evorative.com/discord</gold>"
+            ));
+
         });
         return true;
     }
