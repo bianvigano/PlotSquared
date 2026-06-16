@@ -29,7 +29,6 @@ import com.plotsquared.core.configuration.caption.TranslatableCaption;
 import com.plotsquared.core.inject.annotations.ConfigFile;
 import com.plotsquared.core.inject.annotations.WorldFile;
 import com.plotsquared.core.player.PlotPlayer;
-import com.plotsquared.core.util.PremiumVerification;
 import com.plotsquared.core.util.task.TaskManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -79,10 +78,7 @@ public class DebugPaste extends SubCommand {
                 b.append("PlotSquared Version: ").append(PlotSquared.get().getVersion())
                         .append("\n");
                 b.append("Database Type: ").append(Storage.MySQL.USE ? "MySQL" : "SQLite").append("\n");
-                b.append("Resource ID: ").append(PremiumVerification.getResourceID()).append("\n");
-                b.append("Download ID: ").append(PremiumVerification.getDownloadID()).append("\n");
-                b.append("This PlotSquared version is licensed to the spigot user ")
-                        .append(PremiumVerification.getUserID()).append("\n\n");
+                b.append("\n");
                 b.append("# WorldEdit implementation:\n");
                 b.append(PlotSquared.platform().worldEditImplementations()).append("\n\n");
                 b.append("# Server Information\n");

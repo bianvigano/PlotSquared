@@ -164,9 +164,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.plotsquared.core.util.PremiumVerification.getDownloadID;
-import static com.plotsquared.core.util.PremiumVerification.getResourceID;
-import static com.plotsquared.core.util.PremiumVerification.getUserID;
 import static com.plotsquared.core.util.ReflectionUtils.getRefClass;
 
 @SuppressWarnings("unused")
@@ -319,15 +316,6 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
 
         if (PremiumVerification.isPremium() && Settings.Enabled_Components.UPDATE_NOTIFICATIONS) {
             injector.getInstance(UpdateUtility.class).updateChecker();
-        }
-
-        if (PremiumVerification.isPremium()) {
-            LOGGER.info("PlotSquared version licensed to Spigot user {}", getUserID());
-            LOGGER.info("https://www.spigotmc.org/resources/{}", getResourceID());
-            LOGGER.info("Download ID: {}", getDownloadID());
-            LOGGER.info("Thanks for supporting us :)");
-        } else {
-            LOGGER.info("Couldn't verify purchase :(");
         }
 
         // Database
@@ -1142,10 +1130,6 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
             }
             return map;
         }));
-        metrics.addCustomChart(new SimplePie(
-                "premium",
-                () -> PremiumVerification.isPremium() ? "Premium" : "Non-Premium"
-        ));
         metrics.addCustomChart(new SimplePie("worlds", () -> Settings.Enabled_Components.WORLDS ? "true" : "false"));
         metrics.addCustomChart(new SimplePie("economy", () -> Settings.Enabled_Components.ECONOMY ? "true" : "false"));
         metrics.addCustomChart(new SimplePie(

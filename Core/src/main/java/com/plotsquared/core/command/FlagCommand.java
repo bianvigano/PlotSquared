@@ -509,7 +509,7 @@ public final class FlagCommand extends Command {
         if (args.length == 2 && flag instanceof final ListFlag<?, ?> listFlag) {
             String value = StringMan.join(Arrays.copyOfRange(args, 1, args.length), " ");
             final List<?> list =
-                    new ArrayList<>(plot.getFlag((Class<? extends ListFlag<?, ?>>) listFlag.getClass()));
+                    new ArrayList<>(((ListFlag<?, ?>) plot.getFlagContainer().getFlag(listFlag.getClass())).getValue());
             final PlotFlag parsedFlag;
             try {
                 parsedFlag = listFlag.parse(value);
