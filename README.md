@@ -114,6 +114,40 @@ To avoid unsafe global world access on Folia, some global sweep tasks are intent
 
 The plugin still builds as a single jar and does not require a separate Folia-only artifact.
 
+## `worlds.yml` Example: `plot.floor_claimed`
+
+Plot worlds can optionally override the floor block after a plot is claimed.
+
+Add this to the relevant world section in `worlds.yml`:
+
+```yml
+plot:
+  floor: minecraft:grass_block
+  floor_claimed: minecraft:lime_concrete
+```
+
+Behavior:
+
+* `plot.floor` is used for unclaimed plots
+* `plot.floor_claimed` is used after the plot is claimed
+* if `plot.floor_claimed` is missing or set to `null`, the claimed floor override is disabled
+
+Example with the override disabled:
+
+```yml
+plot:
+  floor: minecraft:grass_block
+  floor_claimed: null
+```
+
+`plot.floor_claimed` uses the same `BlockBucket` / pattern format as `plot.floor`, so weighted patterns are also valid:
+
+```yml
+plot:
+  floor: minecraft:grass_block
+  floor_claimed: 50%minecraft:lime_concrete,50%minecraft:green_concrete
+```
+
 
 <p align="center">
     <a href="https://bstats.org/plugin/bukkit/PlotSquared" title="PlotSquared on bStats">

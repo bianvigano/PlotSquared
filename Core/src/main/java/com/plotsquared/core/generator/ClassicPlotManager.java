@@ -82,13 +82,32 @@ public class ClassicPlotManager extends SquarePlotManager {
 
     @Override
     public boolean unClaimPlot(@NonNull Plot plot, @Nullable Runnable whenDone, @Nullable QueueCoordinator queue) {
-        setWallFilling(plot.getId(), classicPlotWorld.WALL_FILLING.toPattern(), null, queue);
-        if (classicPlotWorld.PLACE_TOP_BLOCK && (!classicPlotWorld.WALL_BLOCK.isAir() || !classicPlotWorld.WALL_BLOCK
-                .equals(classicPlotWorld.CLAIMED_WALL_BLOCK))) {
-            setWall(plot.getId(), classicPlotWorld.WALL_BLOCK.toPattern(), null, queue);
+        boolean success = setWallFilling(plot.getId(), classicPlotWorld.WALL_FILLING.toPattern(), null, queue);
+        if (classicPlotWorld.CLAIMED_TOP_BLOCK != null) {
+            success &= setFloor(plot.getId(), classicPlotWorld.TOP_BLOCK.toPattern(), null, queue);
+        }
+        if (shouldApplyUnclaimedWall()) {
+            success &= setWall(plot.getId(), classicPlotWorld.WALL_BLOCK.toPattern(), null, queue);
         }
         TaskManager.runTask(whenDone);
-        return true;
+        return success;
+    }
+
+    protected @NonNull Pattern getPlotFloorPattern(boolean claimed) {
+        if (claimed && classicPlotWorld.CLAIMED_TOP_BLOCK != null) {
+            return classicPlotWorld.CLAIMED_TOP_BLOCK.toPattern();
+        }
+        return classicPlotWorld.TOP_BLOCK.toPattern();
+    }
+
+    private boolean shouldApplyClaimedWall() {
+        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
+        return classicPlotWorld.PLACE_TOP_BLOCK && (!claim.isAir() || !claim.equals(classicPlotWorld.WALL_BLOCK));
+    }
+
+    private boolean shouldApplyUnclaimedWall() {
+        return classicPlotWorld.PLACE_TOP_BLOCK && (!classicPlotWorld.WALL_BLOCK.isAir() || !classicPlotWorld.WALL_BLOCK
+                .equals(classicPlotWorld.CLAIMED_WALL_BLOCK));
     }
 
     /**
@@ -686,7 +705,7 @@ public class ClassicPlotManager extends SquarePlotManager {
         queue.setCuboid(
                 Location.at(classicPlotWorld.getWorldName(), sx, classicPlotWorld.PLOT_HEIGHT, sz + 1),
                 Location.at(classicPlotWorld.getWorldName(), ex, classicPlotWorld.PLOT_HEIGHT, ez - 1),
-                classicPlotWorld.TOP_BLOCK.toPattern()
+                getPlotFloorPattern(plot.hasOwner())
         );
 
         return !enqueue || queue.enqueue();
@@ -727,7 +746,7 @@ public class ClassicPlotManager extends SquarePlotManager {
         queue.setCuboid(
                 Location.at(classicPlotWorld.getWorldName(), sx + 1, classicPlotWorld.PLOT_HEIGHT, sz),
                 Location.at(classicPlotWorld.getWorldName(), ex - 1, classicPlotWorld.PLOT_HEIGHT, ez),
-                classicPlotWorld.TOP_BLOCK.toPattern()
+                getPlotFloorPattern(plot.hasOwner())
         );
 
         return !enqueue || queue.enqueue();
@@ -767,7 +786,7 @@ public class ClassicPlotManager extends SquarePlotManager {
         queue.setCuboid(
                 Location.at(classicPlotWorld.getWorldName(), sx, classicPlotWorld.PLOT_HEIGHT, sz),
                 Location.at(classicPlotWorld.getWorldName(), ex, classicPlotWorld.PLOT_HEIGHT, ez),
-                classicPlotWorld.TOP_BLOCK.toPattern()
+                getPlotFloorPattern(plot.hasOwner())
         );
 
         return !enqueue || queue.enqueue();
@@ -775,30 +794,44 @@ public class ClassicPlotManager extends SquarePlotManager {
 
     @Override
     public boolean finishPlotMerge(@NonNull List<PlotId> plotIds, @Nullable QueueCoordinator queue) {
-        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
-        if (classicPlotWorld.PLACE_TOP_BLOCK && (!claim.isAir() || !claim.equals(classicPlotWorld.WALL_BLOCK))) {
+        boolean success = true;
+        final BlockBucket claimedTopBlock = classicPlotWorld.CLAIMED_TOP_BLOCK;
+        if (claimedTopBlock != null) {
             for (PlotId plotId : plotIds) {
-                setWall(plotId, claim.toPattern(), null, queue);
+                success &= setFloor(plotId, claimedTopBlock.toPattern(), null, queue);
+            }
+        }
+        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
+        if (shouldApplyClaimedWall()) {
+            for (PlotId plotId : plotIds) {
+                success &= setWall(plotId, claim.toPattern(), null, queue);
             }
         }
         if (Settings.General.MERGE_REPLACE_WALL) {
             final BlockBucket wallBlock = classicPlotWorld.WALL_FILLING;
             for (PlotId id : plotIds) {
-                setWallFilling(id, wallBlock.toPattern(), null, queue);
+                success &= setWallFilling(id, wallBlock.toPattern(), null, queue);
             }
         }
-        return true;
+        return success;
     }
 
     @Override
     public boolean finishPlotUnlink(@NonNull List<PlotId> plotIds, @Nullable QueueCoordinator queue) {
-        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
-        if (classicPlotWorld.PLACE_TOP_BLOCK && (!claim.isAir() || !claim.equals(classicPlotWorld.WALL_BLOCK))) {
+        boolean success = true;
+        final BlockBucket claimedTopBlock = classicPlotWorld.CLAIMED_TOP_BLOCK;
+        if (claimedTopBlock != null) {
             for (PlotId id : plotIds) {
-                setWall(id, claim.toPattern(), null, queue);
+                success &= setFloor(id, claimedTopBlock.toPattern(), null, queue);
             }
         }
-        return true; // return false if unlink has been denied
+        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
+        if (shouldApplyClaimedWall()) {
+            for (PlotId id : plotIds) {
+                success &= setWall(id, claim.toPattern(), null, queue);
+            }
+        }
+        return success; // return false if unlink has been denied
     }
 
     @Override
@@ -813,11 +846,16 @@ public class ClassicPlotManager extends SquarePlotManager {
 
     @Override
     public boolean claimPlot(@NonNull Plot plot, @Nullable QueueCoordinator queue) {
-        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
-        if (classicPlotWorld.PLACE_TOP_BLOCK && (!claim.isAir() || !claim.equals(classicPlotWorld.WALL_BLOCK))) {
-            return setWall(plot.getId(), claim.toPattern(), null, queue);
+        boolean success = true;
+        final BlockBucket claimedTopBlock = classicPlotWorld.CLAIMED_TOP_BLOCK;
+        if (claimedTopBlock != null) {
+            success &= setFloor(plot.getId(), claimedTopBlock.toPattern(), null, queue);
         }
-        return true;
+        final BlockBucket claim = classicPlotWorld.CLAIMED_WALL_BLOCK;
+        if (shouldApplyClaimedWall()) {
+            success &= setWall(plot.getId(), claim.toPattern(), null, queue);
+        }
+        return success;
     }
 
     @Override

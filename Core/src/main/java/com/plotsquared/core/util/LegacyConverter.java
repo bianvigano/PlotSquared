@@ -49,6 +49,7 @@ public final class LegacyConverter {
     static {
         TYPE_MAP.put("plot.filling", ConfigurationType.BLOCK_LIST);
         TYPE_MAP.put("plot.floor", ConfigurationType.BLOCK_LIST);
+        TYPE_MAP.put("plot.floor_claimed", ConfigurationType.BLOCK_LIST);
         TYPE_MAP.put("wall.filling", ConfigurationType.BLOCK);
         TYPE_MAP.put("wall.block_claimed", ConfigurationType.BLOCK);
         TYPE_MAP.put("wall.block", ConfigurationType.BLOCK);

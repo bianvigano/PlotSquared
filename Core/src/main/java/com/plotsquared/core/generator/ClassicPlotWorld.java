@@ -46,6 +46,7 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
     public int WALL_HEIGHT = 62;
     public BlockBucket MAIN_BLOCK = new BlockBucket(BlockTypes.STONE);
     public BlockBucket TOP_BLOCK = new BlockBucket(BlockTypes.GRASS_BLOCK);
+    public @Nullable BlockBucket CLAIMED_TOP_BLOCK = null;
     public BlockBucket WALL_BLOCK = new BlockBucket(BlockTypes.STONE_SLAB);
     public BlockBucket CLAIMED_WALL_BLOCK = new BlockBucket(BlockTypes.SANDSTONE_SLAB);
     public BlockBucket WALL_FILLING = new BlockBucket(BlockTypes.STONE);
@@ -77,6 +78,24 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
             LOGGER.error("Failed to parse pattern '{}', check your worlds.yml", input);
             LOGGER.error("Falling back to {}", def);
             return def;
+        }
+        return bucket;
+    }
+
+    private static @Nullable BlockBucket createOptionalCheckedBlockBucket(@Nullable String input) {
+        if (input == null || input.isBlank() || "null".equalsIgnoreCase(input)) {
+            return null;
+        }
+        final BlockBucket bucket = new BlockBucket(input);
+        Pattern pattern = null;
+        try {
+            pattern = bucket.toPattern();
+        } catch (Exception ignore) {
+        }
+        if (pattern == null) {
+            LOGGER.error("Failed to parse optional pattern '{}', check your worlds.yml", input);
+            LOGGER.error("Disabling claimed floor override");
+            return null;
         }
         return bucket;
     }
@@ -147,6 +166,7 @@ public abstract class ClassicPlotWorld extends SquarePlotWorld {
         this.PLOT_HEIGHT = Math.min(getMaxGenHeight(), config.getInt("plot.height"));
         this.MAIN_BLOCK = createCheckedBlockBucket(config.getString("plot.filling"), MAIN_BLOCK);
         this.TOP_BLOCK = createCheckedBlockBucket(config.getString("plot.floor"), TOP_BLOCK);
+        this.CLAIMED_TOP_BLOCK = createOptionalCheckedBlockBucket(config.getString("plot.floor_claimed"));
         this.WALL_BLOCK = createCheckedBlockBucket(config.getString("wall.block"), WALL_BLOCK);
         this.ROAD_HEIGHT = Math.min(getMaxGenHeight(), config.getInt("road.height"));
         this.ROAD_BLOCK = createCheckedBlockBucket(config.getString("road.block"), ROAD_BLOCK);
