@@ -1922,7 +1922,7 @@ public class SQLManager implements AbstractDB {
                                 } else {
                                     LOGGER.info(
                                             "Plot #{}({}) in `{}plot` is a duplicate."
-                                                    + " Delete this plot or set `database-purger: true` in the settings.yml",
+                                                    + " Delete this plot or set `auto-purge: true` in the settings.yml",
                                             id,
                                             last,
                                             this.prefix
@@ -1958,7 +1958,7 @@ public class SQLManager implements AbstractDB {
                                 toDelete.add(id);
                             } else {
                                 LOGGER.warn("Entry #{}({}) in `plot_rating` does not exist."
-                                        + " Create this plot or set `database-purger: true` in settings.yml", id, plot);
+                                        + " Create this plot or set `auto-purge: true` in settings.yml", id, plot);
                             }
                         }
                         deleteRows(toDelete, this.prefix + "plot_rating", "plot_plot_id");
@@ -1986,7 +1986,7 @@ public class SQLManager implements AbstractDB {
                             toDelete.add(id);
                         } else {
                             LOGGER.warn("Entry #{}({}) in `plot_helpers` does not exist."
-                                    + " Create this plot or set `database-purger: true` in settings.yml", id, plot);
+                                    + " Create this plot or set `auto-purge: true` in settings.yml", id, plot);
                         }
                     }
                     deleteRows(toDelete, this.prefix + "plot_helpers", "plot_plot_id");
@@ -2013,7 +2013,7 @@ public class SQLManager implements AbstractDB {
                             toDelete.add(id);
                         } else {
                             LOGGER.warn("Entry #{}({}) in `plot_trusted` does not exist."
-                                    + " Create this plot or set `database-purger: true` in settings.yml", id, plot);
+                                    + " Create this plot or set `auto-purge: true` in settings.yml", id, plot);
                         }
                     }
                     deleteRows(toDelete, this.prefix + "plot_trusted", "plot_plot_id");
@@ -2040,7 +2040,7 @@ public class SQLManager implements AbstractDB {
                             toDelete.add(id);
                         } else {
                             LOGGER.warn("Entry #{}({}) in `plot_denied` does not exist."
-                                    + " Create this plot or set `database-purger: true` in settings.yml", id, plot);
+                                    + " Create this plot or set `auto-purge: true` in settings.yml", id, plot);
                         }
                     }
                     deleteRows(toDelete, this.prefix + "plot_denied", "plot_plot_id");
@@ -2082,7 +2082,7 @@ public class SQLManager implements AbstractDB {
                             toDelete.add(id);
                         } else {
                             LOGGER.warn("Entry #{}({}) in `plot_flags` does not exist."
-                                    + " Create this plot or set `database-purger: true` in settings.yml", id, plot);
+                                    + " Create this plot or set `auto-purge: true` in settings.yml", id, plot);
                         }
                     }
                     BlockTypeListFlag.skipCategoryVerification =
@@ -2138,7 +2138,7 @@ public class SQLManager implements AbstractDB {
                             toDelete.add(id);
                         } else {
                             LOGGER.warn("Entry #{}({}) in `plot_settings` does not exist."
-                                    + " Create this plot or set `database-purger: true` in settings.yml", id, plot);
+                                    + " Create this plot or set `auto-purge: true` in settings.yml", id, plot);
                         }
                     }
                     deleteRows(toDelete, this.prefix + "plot_settings", "plot_plot_id");
@@ -3250,7 +3250,7 @@ public class SQLManager implements AbstractDB {
             if (plot.getArea() == null) {
                 LOGGER.error("CRITICAL ERROR IN VALIDATION TASK: {}", plot);
                 LOGGER.error("PLOT AREA CANNOT BE NULL! SKIPPING PLOT!");
-                LOGGER.info("Delete this entry from your database or set `database-purger: true` in the settings.yml");
+                LOGGER.info("Delete this entry from your database or set `auto-purge: true` in the settings.yml");
                 continue;
             }
             if (database == null) {
