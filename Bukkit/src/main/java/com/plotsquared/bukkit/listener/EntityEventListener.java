@@ -459,6 +459,11 @@ public class EntityEventListener implements Listener {
         if (area == null) {
             return;
         }
+        final String entityType = entity.getType().name();
+        if ("TNT_MINECART".equals(entityType) || "MINECART_TNT".equals(entityType)) {
+            entity.remove();
+            return;
+        }
         Plot plot = area.getOwnedPlotAbs(location);
         if (plot == null || BukkitEntityUtil.checkEntity(entity, plot)) {
             entity.remove();

@@ -1149,6 +1149,37 @@ public final class BukkitPlatform extends JavaPlugin implements Listener, PlotPl
     }
 
     @Override
+    public void onPlotClaimed(final @NonNull PlotPlayer<?> player, final @NonNull Plot plot, final boolean auto) {
+        if (!Settings.Claim_Commands.ENABLED) {
+            return;
+        }
+        if (auto && !Settings.Claim_Commands.ALSO_RUN_ON_AUTO) {
+            return;
+        }
+        for (final String rawCommand : Settings.Claim_Commands.COMMANDS) {
+            if (rawCommand == null) {
+                continue;
+            }
+            String command = rawCommand.trim();
+            if (command.isEmpty()) {
+                continue;
+            }
+            if (command.startsWith("/")) {
+                command = command.substring(1);
+            }
+            command = command
+                    .replace("{player}", player.getName())
+                    .replace("{uuid}", player.getUUID().toString())
+                    .replace("{plot}", plot.getId().toString())
+                    .replace("{world}", plot.getWorldName())
+                    .replace("{auto}", Boolean.toString(auto));
+            if (!Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)) {
+                LOGGER.warn("Failed to execute configured plot-claim command: {}", command);
+            }
+        }
+    }
+
+    @Override
     public void setGenerator(final @NonNull String worldName) {
         World world = BukkitUtil.getWorld(worldName);
         if (world == null) {

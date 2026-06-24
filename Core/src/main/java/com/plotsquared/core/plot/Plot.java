@@ -1780,6 +1780,7 @@ public class Plot {
             area.addPlot(this);
             updateWorldBorder();
         }
+        PlotSquared.platform().onPlotClaimed(player, this, auto);
         player.sendMessage(
                 TranslatableCaption.of("working.claimed"),
                 TagResolver.resolver("world", Tag.inserting(Component.text(this.getWorldName()))),

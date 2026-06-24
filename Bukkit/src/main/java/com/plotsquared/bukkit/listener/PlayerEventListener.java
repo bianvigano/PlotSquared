@@ -1296,6 +1296,11 @@ public class PlayerEventListener implements Listener {
                 }
 
                 Material type = event.getMaterial();
+                if (type == Material.TNT_MINECART) {
+                    event.setCancelled(true);
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    return;
+                }
 
                 // in the following, lb needs to have the material of the item in hand i.e. type
                 switch (type.toString()) {

@@ -742,6 +742,33 @@ public class Settings extends Config {
         public static boolean INSTABREAK_CONSIDER_TOOL = false;
     }
 
+    @Comment({
+            "Console commands to run after a plot is successfully claimed.",
+            "Useful for rank changes, permissions, or external plugin integration."
+    })
+    public static final class Claim_Commands {
+
+        @Comment({
+                "Enable this section.",
+                "If false, no claim command will be executed."
+        })
+        public static boolean ENABLED = false;
+        @Comment({
+                "Also execute these commands when a player claims a plot using `/plot auto`.",
+                "If false, commands only run for manual `/plot claim`."
+        })
+        public static boolean ALSO_RUN_ON_AUTO = false;
+        @Comment({
+                "Commands are executed by the server console.",
+                "You may include multiple commands in this list.",
+                "Available placeholders: {player}, {uuid}, {plot}, {world}, {auto}"
+        })
+        public static List<String> COMMANDS = Arrays.asList(
+                "lp user {player} parent set builder"
+        );
+
+    }
+
     @Comment({"Enable or disable parts of the plugin",
             "Note: A cache will use some memory if enabled"})
     public static final class Enabled_Components { // Group the following values into a new config section

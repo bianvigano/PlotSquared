@@ -32,6 +32,7 @@ import com.plotsquared.core.inject.annotations.DefaultGenerator;
 import com.plotsquared.core.location.World;
 import com.plotsquared.core.permissions.PermissionHandler;
 import com.plotsquared.core.player.PlotPlayer;
+import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.expiration.ExpireManager;
 import com.plotsquared.core.plot.world.PlotAreaManager;
 import com.plotsquared.core.queue.GlobalBlockQueue;
@@ -392,6 +393,17 @@ public interface PlotPlatform<P> extends LocaleHolder {
      */
     default boolean isFaweHooking() {
         return false;
+    }
+
+    /**
+     * Called after a plot has been successfully claimed.
+     *
+     * @param player Player that claimed the plot
+     * @param plot   Claimed plot
+     * @param auto   If the claim originated from {@code /plot auto}
+     * @since 7.6.0
+     */
+    default void onPlotClaimed(@NonNull PlotPlayer<?> player, @NonNull Plot plot, boolean auto) {
     }
 
 }

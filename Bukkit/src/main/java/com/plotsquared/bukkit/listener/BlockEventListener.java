@@ -875,6 +875,17 @@ public class BlockEventListener implements Listener {
             return;
         }
         Material type = event.getItem().getType();
+        if (type == Material.TNT_MINECART) {
+            Location location = BukkitUtil.adapt(event.getBlock().getLocation());
+            if (event.getBlock().getType() != Material.DROPPER) {
+                BlockFace targetFace = ((Dispenser) event.getBlock().getBlockData()).getFacing();
+                location = BukkitUtil.adapt(event.getBlock().getRelative(targetFace).getLocation());
+            }
+            if (location.isPlotArea()) {
+                event.setCancelled(true);
+            }
+            return;
+        }
         switch (type.toString()) {
             case "SHULKER_BOX", "WHITE_SHULKER_BOX", "ORANGE_SHULKER_BOX", "MAGENTA_SHULKER_BOX", "LIGHT_BLUE_SHULKER_BOX",
                     "YELLOW_SHULKER_BOX", "LIME_SHULKER_BOX", "PINK_SHULKER_BOX", "GRAY_SHULKER_BOX", "LIGHT_GRAY_SHULKER_BOX",
